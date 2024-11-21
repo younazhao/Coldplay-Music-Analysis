@@ -1,0 +1,131 @@
+---
+title: "Exploring Coldplay's Music Through Data Analysis"
+subtitle: "The consistency of the Coldyplay song lengths over relased years and uncorrelated relationship between tempo vs danceability and energy."
+author: 
+  - Yun Chu
+  - Tianrui Fu
+  - Felix Li
+  - Chris Yong Hong Sen
+  - Wen Han Zhao
+thanks: "Code and data are available at: [https://github.com/FrankFU323/Coldplay_data_analysis.git]"
+date: today
+date-format: long
+abstract: This study analyzes Coldplay's discography using data from the Spotify API, focusing on tempo, energy, danceability, and song lengths over the years. Utilizing various visualization techniques, we uncover trends and relationships among these features, revealing correlations between tempo and energy, as well as variations in song lengths over time. The findings provide insights into Coldplay's musical evolution and demonstrate the power of data visualization in contemporary music analysis.
+format: pdf
+number-sections: true
+bibliography: references.bib
+toc: true
+---
+
+```{r}
+#| include: false
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(here)
+library(dplyr)
+library(lubridate)
+options(scipen = 999)
+```
+
+```{r}
+#| include: false
+#| warning: false
+#| message: false
+coldplay <- readRDS(here("data/00-raw_data/coldplay.rds"))
+```
+
+# Introduction {#sec-introduction}
+
+This study used the R [@citeR] package to clean and analyze Coldplay data [@citedata], including the following packages: Usethis [@usethis], tidyverse[@tidyverse], here [@here], ggally [@GGally], and ggplot2 [@ggplot2], and retrieved the Coldplay dataset using spotify R [@spotifyr].
+
+Coldplay is an English rock band formed by Chris Martin, Jonny Buckland, Guy Berryman, and Will Champion in 1996. Their renowned singles include "Yellow" and "Fix You." Most of their music falls into the genres of rock, pop, and electronic, with recurring themes of love and hope in their lyrics. Albums like Parachutes, A Rush of Blood to the Head, and Viva la Vida are recognized worldwide. Coldplay creates vibrant, interactive live performances, winning numerous Grammy Awards, and continues to influence the global music scene with their emotive, genre-blending sound. 
+
+In this paper, we aim to conduct an analysis by identifying trends and making comparisons across various aspects of Coldplay's music. @sec-result contains the two graphs of duration vs album release date compared to tempo vs danceability with energy. @sec-appendix contains the variables used in the dataset.
+
+# Results {#sec-result}
+
+## Duration vs Album Release Date
+@fig-duration-date represents the relationship of Coldplay songs between the duration of their songs, which are measured in milliseconds, and album release dates, from 2000 to 2024. Each dot on the graph would represent the release of a song and the vertical lines would represent the minimum and maximum length of a newly released song during that year. 
+
+From @fig-duration-date, we can see that the majority of the songs were released from 2009 to 2020. From this section, we can see that most durations of the songs are between 200,000 to 300,000 milliseconds, corresponding to 3.3 to 5 minutes. This suggests that the average song length in this time period has been quite consistent. The minimum during that period is 33,000, corresponding to half a minute, and the maximum is 525,706, corresponding to almost 8 minutes.
+
+We can see that there are notable variations. For example, in the earlier years and later years, several songs have significantly longer duration. Particularly in the 2010s and later, there are several outliers representing notably longer tracks, which could indicate either a shift toward more narrative-driven compositions or possibly deluxe editions of albums that feature extended versions of certain tracks. Especially, the song released in 2021, “Coloratura”, exceeded 400,000 milliseconds which is 10 minutes. 
+
+Overall, @fig-duration-date shows that Coldplay indicate a consistent range of song lengths with some occasional extremes, which could represent the artist's variation in different genres or composition styles.
+
+```{r, fig.pos= 'H'}
+#| label: fig-duration-date
+#| fig-cap: Distribution of Coldplay Song Durations Across Album Release Dates
+#| echo: false
+#| warning: false
+#| message: false
+
+coldplay <- as_tibble(coldplay)
+
+coldplay |>
+  mutate(album_release_date = ymd(album_release_date)) |>
+  ggplot(aes(
+    x = album_release_date,
+    y = duration_ms,
+    group = album_release_date
+  )) +
+  geom_boxplot() +
+  geom_jitter(alpha = 0.5, width = 0.3, height = 0) +
+  theme_minimal() +
+  labs(
+    x = "Album release date",
+    y = "Duration of song (ms)"
+  )
+```
+\newpage
+
+## Tempo and Danceability with Energy
+@fig-tempo-danceability-energy provides the relationship between danceability and tempo in BPM for Coldplay's songs, with color intensities showing energy. In general, danceability falls between about 0.2 and 0.6, while tempo seems to fall between about 60 to 200 BPM. As seen from @fig-tempo-danceability-energy, most songs cluster among tempos of 90 to 150 BPM, while for most songs, danceability values also lie between 0.3 and 0.5, indicating a medium rhythmic appeal.
+
+Again, the distribution of energy, represented by darker colors, is pretty flat across both danceability and tempo. Even though many of Coldplay's higher-energy songs are unequivocally faster which mostly have BPM between 100 to 150, they don't strongly relate to danceability as explained earlier.
+
+@fig-tempo-danceability-energy underlines the diversity within Coldplay's music, which combines energetic and slower tempos with moderately peppy danceability, congruous with their stylistic range from introspective to upbeat tracks.
+```{r, fig.pos= 'H'}
+#| label: fig-tempo-danceability-energy
+#| fig-cap: Relationship Between Tempo and Danceability in Coldplay’s Songs
+#| echo: false
+#| warning: false
+#| message: false
+library(GGally)
+
+coldplay <- as_tibble(coldplay)
+library(ggplot2)
+
+ggplot(coldplay, aes(x = tempo, y = danceability, color = energy)) +
+  geom_point(size = 2) + 
+  scale_color_gradient(low = "lightblue", high = "darkblue", name = "Energy") + 
+  labs(
+       x = "Tempo (BPM)",
+       y = "Danceability",
+       color = "Energy") +
+  theme_minimal() 
+```
+
+\newpage
+
+\appendix
+# Appendix {#sec-appendix}
+
+## Instructions of Used Variables
+We have used the following variables in this dataset: 
+
+- **album_release_date:** The release date of each album. 
+- **duration_ms:** The duration of the track in milliseconds.
+- **tempo:** The overall estimated tempo of a track in beats per minute (BPM). In musical terminology, tempo is the speed or pace of a given piece and derives directly from the average beat duration. 
+- **danceability:** Danceability describes how suitable a track is for dancing based on a combination of musical elements including tempo, rhythm stability, beat strength, and overall regularity. A value of 0.0 is least danceable and 1.0 is most danceable. 
+- **energy:** Energy is a measure from 0.0 to 1.0 and represents a perceptual measure of intensity and activity. Typically, energetic tracks feel fast, loud, and noisy. For example, death metal has high energy, while a Bach prelude scores low on the scale. Perceptual features contributing to this attribute include dynamic range, perceived loudness, timbre, onset rate, and general entropy. 
+
+The measurements for danceability and energy were adapted from Spotify in previous years, where university students ranked songs based on their feelings, according to @Rohan.
+
+\newpage
+
+# References {#sec-references}
+
+
